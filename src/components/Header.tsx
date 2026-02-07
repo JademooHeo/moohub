@@ -8,6 +8,7 @@ const navItems = [
   { label: '홈', href: '/' },
   { label: '메모', href: '/memo' },
   { label: '블로그', href: '/blog' },
+  { label: '즐겨찾기', href: '/bookmarks' },
 ];
 
 export default function Header() {
