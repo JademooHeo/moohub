@@ -28,7 +28,6 @@ function parseRSS(xml: string, source: string): NewsItem[] {
       const linkEl = item.querySelector('link');
       const title = titleEl?.textContent?.trim() || '';
       const link = linkEl?.textContent?.trim() || '';
-      // Google News 제목에서 " - 출처" 부분 제거
       const cleanTitle = title.replace(/\s*-\s*[^-]+$/, '');
       if (cleanTitle) {
         result.push({ title: cleanTitle, link, source });
@@ -76,18 +75,21 @@ export default function NewsWidget() {
   ];
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div className="glass-card p-6">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">📰 뉴스</h3>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500/10 text-xs">📰</span>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">뉴스</h3>
+        </div>
+        <div className="flex rounded-lg bg-gray-900/5 p-0.5 dark:bg-white/5">
           {categories.map((c) => (
             <button
               key={c.key}
               onClick={() => setCategory(c.key)}
-              className={`rounded px-2 py-0.5 text-xs transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
                 category === c.key
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-white text-indigo-600 shadow-sm dark:bg-white/10 dark:text-indigo-400'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
             >
               {c.label}
@@ -98,24 +100,24 @@ export default function NewsWidget() {
 
       {loading ? (
         <div className="flex h-28 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
         </div>
       ) : error ? (
         <div className="text-center text-sm text-gray-400">{error}</div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {news.map((item, i) => (
             <li key={i}>
               <a
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start gap-2 text-sm"
+                className="group flex items-start gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-900/[0.03] dark:hover:bg-white/[0.03]"
               >
-                <span className="mt-0.5 shrink-0 text-xs text-gray-300 dark:text-gray-600">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-indigo-500/10 text-[10px] font-semibold text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-400">
                   {i + 1}
                 </span>
-                <span className="text-gray-700 group-hover:text-indigo-500 dark:text-gray-300 dark:group-hover:text-indigo-400 line-clamp-1">
+                <span className="text-gray-700 group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400 line-clamp-1">
                   {item.title}
                 </span>
               </a>
@@ -124,7 +126,7 @@ export default function NewsWidget() {
         </ul>
       )}
 
-      <div className="mt-3 text-right text-xs text-gray-300 dark:text-gray-600">
+      <div className="mt-3 text-right text-[10px] text-gray-300 dark:text-gray-600">
         {CATEGORY_INFO[category].source}
       </div>
     </div>

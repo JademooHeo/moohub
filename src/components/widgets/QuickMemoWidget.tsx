@@ -23,28 +23,37 @@ export default function QuickMemoWidget() {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div className="glass-card p-6">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">빠른 메모</h3>
-        <span className="text-xs text-gray-400">
-          {format(new Date(), 'yyyy.MM.dd (EEE)', { locale: ko })}
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-500/10 text-xs">📝</span>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">빠른 메모</h3>
+        </div>
+        <span className="rounded-full bg-gray-900/5 px-2.5 py-0.5 text-xs text-gray-400 dark:bg-white/5">
+          {format(new Date(), 'MM.dd EEE', { locale: ko })}
         </span>
       </div>
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="오늘의 메모를 작성하세요..."
-        className="h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        className="glass-input h-24 w-full resize-none rounded-xl p-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
       />
       <div className="mt-3 flex items-center justify-between">
-        {saved && (
-          <span className="text-xs text-green-500">저장되었습니다!</span>
+        {saved ? (
+          <span className="flex items-center gap-1 text-xs text-emerald-500">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            저장됨
+          </span>
+        ) : (
+          <div />
         )}
-        <div className="flex-1" />
         <button
           onClick={handleSave}
           disabled={!content.trim()}
-          className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="glass-btn rounded-xl px-4 py-1.5 text-sm font-medium text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
           저장
         </button>

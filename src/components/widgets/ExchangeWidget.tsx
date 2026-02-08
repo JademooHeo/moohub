@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 interface ExchangeRate {
   currency: string;
   label: string;
+  flag: string;
   rate: number;
   change: number;
 }
@@ -22,16 +23,17 @@ export default function ExchangeWidget() {
         const data = await res.json();
 
         const currencies = [
-          { code: 'USD', label: '미국 달러 (USD)' },
-          { code: 'JPY', label: '일본 엔 (JPY)' },
-          { code: 'EUR', label: '유로 (EUR)' },
+          { code: 'USD', label: 'USD', flag: '🇺🇸' },
+          { code: 'JPY', label: 'JPY', flag: '🇯🇵' },
+          { code: 'EUR', label: 'EUR', flag: '🇪🇺' },
         ];
 
         const newRates = currencies.map((c) => ({
           currency: c.code,
           label: c.label,
+          flag: c.flag,
           rate: data.rates[c.code] ? Math.round((1 / data.rates[c.code]) * 100) / 100 : 0,
-          change: (Math.random() - 0.5) * 2, // 실제 API에서는 전일 대비 변동률 제공
+          change: (Math.random() - 0.5) * 2,
         }));
 
         setRates(newRates);
@@ -43,35 +45,42 @@ export default function ExchangeWidget() {
     };
 
     fetchRates();
-    const interval = setInterval(fetchRates, 3600000); // 1시간마다
+    const interval = setInterval(fetchRates, 3600000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">환율 (KRW 기준)</h3>
+    <div className="glass-card p-6">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-xs">💱</span>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">환율 (KRW)</h3>
+      </div>
       {loading ? (
         <div className="flex h-20 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
         </div>
       ) : error ? (
         <div className="text-center text-sm text-gray-400">{error}</div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {rates.map((r) => (
-            <div key={r.currency} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">{r.label}</span>
-              <div className="text-right">
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {r.rate.toLocaleString()}원
+            <div key={r.currency} className="flex items-center justify-between rounded-xl bg-gray-900/[0.02] px-3 py-2 dark:bg-white/[0.03]">
+              <div className="flex items-center gap-2">
+                <span className="text-base">{r.flag}</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{r.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold tabular-nums text-gray-900 dark:text-white">
+                  {r.rate.toLocaleString()}
+                  <span className="text-xs font-normal text-gray-400">원</span>
                 </span>
                 <span
-                  className={`ml-2 text-xs font-medium ${
+                  className={`rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums ${
                     r.change > 0
-                      ? 'text-red-500'
+                      ? 'bg-red-500/10 text-red-500'
                       : r.change < 0
-                      ? 'text-blue-500'
-                      : 'text-gray-400'
+                      ? 'bg-blue-500/10 text-blue-500'
+                      : 'bg-gray-500/10 text-gray-400'
                   }`}
                 >
                   {r.change > 0 ? '+' : ''}

@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import useThemeStore from '@/stores/useThemeStore';
 
 const navItems = [
-  { label: '홈', href: '/' },
-  { label: '메모', href: '/memo' },
-  { label: '블로그', href: '/blog' },
-  { label: '즐겨찾기', href: '/bookmarks' },
+  { label: '홈', href: '/', icon: '🏠' },
+  { label: '메모', href: '/memo', icon: '📝' },
+  { label: '블로그', href: '/blog', icon: '✍️' },
+  { label: '즐겨찾기', href: '/bookmarks', icon: '⭐' },
 ];
 
 export default function Header() {
@@ -16,12 +16,17 @@ export default function Header() {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/80">
+    <header className="glass-header sticky top-0 z-50">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-          MooHub
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-xl font-bold tracking-tight"
+        >
+          <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            MooHub
+          </span>
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-0.5">
           {navItems.map((item) => {
             const isActive =
               item.href === '/'
@@ -31,19 +36,24 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`relative rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white'
+                    ? 'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400'
+                    : 'text-gray-500 hover:bg-white/40 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                 }`}
               >
+                <span className="hidden sm:inline mr-1">{item.icon}</span>
                 {item.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-indigo-500" />
+                )}
               </Link>
             );
           })}
+          <div className="mx-2 h-5 w-px bg-gray-200 dark:bg-gray-700/50" />
           <button
             onClick={toggleTheme}
-            className="ml-2 rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="rounded-xl p-2 text-gray-500 transition-all duration-200 hover:bg-white/40 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
             aria-label="테마 전환"
           >
             {theme === 'dark' ? (

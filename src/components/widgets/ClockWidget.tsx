@@ -12,14 +12,31 @@ export default function ClockWidget() {
     return () => clearInterval(timer);
   }, []);
 
+  const hours = format(now, 'HH');
+  const minutes = format(now, 'mm');
+  const seconds = format(now, 'ss');
+
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">시계</h3>
+    <div className="glass-card p-6">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10 text-xs">⏰</span>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">시계</h3>
+      </div>
       <div className="text-center">
-        <div className="text-4xl font-bold tabular-nums tracking-tight text-gray-900 dark:text-white">
-          {format(now, 'HH:mm:ss')}
+        <div className="flex items-center justify-center gap-1">
+          <span className="inline-block rounded-lg bg-gray-900/5 px-3 py-2 text-4xl font-bold tabular-nums tracking-tight text-gray-900 dark:bg-white/5 dark:text-white">
+            {hours}
+          </span>
+          <span className="text-3xl font-light text-indigo-400 animate-pulse">:</span>
+          <span className="inline-block rounded-lg bg-gray-900/5 px-3 py-2 text-4xl font-bold tabular-nums tracking-tight text-gray-900 dark:bg-white/5 dark:text-white">
+            {minutes}
+          </span>
+          <span className="text-3xl font-light text-indigo-400 animate-pulse">:</span>
+          <span className="inline-block rounded-lg bg-indigo-500/10 px-3 py-2 text-4xl font-bold tabular-nums tracking-tight text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
+            {seconds}
+          </span>
         </div>
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
           {format(now, 'yyyy년 MM월 dd일 EEEE', { locale: ko })}
         </div>
       </div>
