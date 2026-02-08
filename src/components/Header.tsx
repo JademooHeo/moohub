@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import useThemeStore from '@/stores/useThemeStore';
 
 const navItems = [
   { label: '홈', href: '/', icon: '🏠' },
+  { label: '캘린더', href: '/calendar', icon: '📅' },
   { label: '메모', href: '/memo', icon: '📝' },
   { label: '블로그', href: '/blog', icon: '✍️' },
   { label: '즐겨찾기', href: '/bookmarks', icon: '⭐' },
@@ -14,6 +16,7 @@ const navItems = [
 export default function Header() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useThemeStore();
+  const { data: session } = useSession();
 
   return (
     <header className="glass-header sticky top-0 z-50">
@@ -66,6 +69,29 @@ export default function Header() {
               </svg>
             )}
           </button>
+          {/* Google 로그인/로그아웃 */}
+          {session ? (
+            <button
+              onClick={() => signOut()}
+              className="ml-1 flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-white/40 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
+            >
+              {session.user?.image && (
+                <img
+                  src={session.user.image}
+                  className="h-5 w-5 rounded-full"
+                  alt=""
+                />
+              )}
+              <span className="hidden sm:inline">로그아웃</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => signIn('google')}
+              className="glass-btn ml-1 rounded-xl px-3 py-1.5 text-xs font-medium text-white"
+            >
+              로그인
+            </button>
+          )}
         </nav>
       </div>
     </header>

@@ -6,6 +6,7 @@ import ExchangeWidget from '@/components/widgets/ExchangeWidget';
 import StockWidget from '@/components/widgets/StockWidget';
 import QuickMemoWidget from '@/components/widgets/QuickMemoWidget';
 import NewsWidget from '@/components/widgets/NewsWidget';
+import CalendarWidget from '@/components/widgets/CalendarWidget';
 
 export default function Home() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           <ClockWidget />
           <WeatherWidget />
+          <CalendarWidget />
           <ExchangeWidget />
           <StockWidget />
           <QuickMemoWidget />
