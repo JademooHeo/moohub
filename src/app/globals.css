@@ -81,6 +81,51 @@ body {
   font-weight: 600;
 }
 
+/* Tiptap WYSIWYG Editor */
+.tiptap-editor {
+  padding: 1.5rem;
+  min-height: 500px;
+  outline: none;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap-editor .editor-link {
+  color: #6366f1;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-editor .editor-image {
+  max-width: 100%;
+  border-radius: 0.5em;
+  margin: 0.75em 0;
+}
+
+.tiptap-editor .code-block {
+  background: #1e1e2e;
+  color: #e5e7eb;
+  padding: 1em;
+  border-radius: 0.5em;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.tiptap-editor strong { font-weight: 700; }
+.tiptap-editor em { font-style: italic; }
+.tiptap-editor s { text-decoration: line-through; }
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

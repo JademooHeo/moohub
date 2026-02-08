@@ -2,9 +2,23 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import useBlogStore, { PostStatus } from '@/stores/useBlogStore';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import Placeholder from '@tiptap/extension-placeholder';
+import TurndownService from 'turndown';
+import { marked } from 'marked';
+import useBlogStore from '@/stores/useBlogStore';
+
+// Turndown 인스턴스 (HTML → Markdown)
+const turndown = new TurndownService({
+  headingStyle: 'atx',
+  codeBlockStyle: 'fenced',
+  bulletListMarker: '-',
+});
+
+// 테이블 등 커스텀 규칙 없이 기본 사용
 
 function BlogWriteContent() {
   const router = useRouter();
@@ -20,44 +34,37 @@ function BlogWriteContent() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [loaded, setLoaded] = useState(false);
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isSettingContent = useRef(false);
 
-  const insertMarkdown = (before: string, after: string = '', placeholder: string = '') => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    const selected = content.substring(start, end);
-    const text = selected || placeholder;
-    const newContent = content.substring(0, start) + before + text + after + content.substring(end);
-    setContent(newContent);
-    // 커서 위치 조정
-    setTimeout(() => {
-      ta.focus();
-      const cursorPos = start + before.length + text.length;
-      ta.setSelectionRange(
-        selected ? cursorPos + after.length : start + before.length,
-        selected ? cursorPos + after.length : start + before.length + text.length
-      );
-    }, 0);
-  };
-
-  const toolbarItems = [
-    { label: 'H1', title: '제목 1', action: () => insertMarkdown('# ', '\n', '제목') },
-    { label: 'H2', title: '제목 2', action: () => insertMarkdown('## ', '\n', '제목') },
-    { label: 'H3', title: '제목 3', action: () => insertMarkdown('### ', '\n', '제목') },
-    { label: 'B', title: '굵게', action: () => insertMarkdown('**', '**', '굵은 텍스트'), bold: true },
-    { label: 'I', title: '기울임', action: () => insertMarkdown('*', '*', '기울인 텍스트'), italic: true },
-    { label: '~', title: '취소선', action: () => insertMarkdown('~~', '~~', '취소선 텍스트') },
-    { label: '"', title: '인용', action: () => insertMarkdown('> ', '\n', '인용문') },
-    { label: '-', title: '목록', action: () => insertMarkdown('- ', '\n', '항목') },
-    { label: '1.', title: '번호 목록', action: () => insertMarkdown('1. ', '\n', '항목') },
-    { label: '<>', title: '인라인 코드', action: () => insertMarkdown('`', '`', '코드') },
-    { label: '```', title: '코드 블록', action: () => insertMarkdown('```\n', '\n```\n', '코드를 입력하세요') },
-    { label: '---', title: '구분선', action: () => insertMarkdown('\n---\n', '') },
-    { label: '🔗', title: '링크', action: () => insertMarkdown('[', '](https://)', '링크 텍스트') },
-    { label: '📷', title: '이미지', action: () => insertMarkdown('![', '](이미지URL)', '이미지 설명') },
-  ];
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        codeBlock: { HTMLAttributes: { class: 'code-block' } },
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { class: 'editor-link' },
+      }),
+      Image.configure({
+        HTMLAttributes: { class: 'editor-image' },
+      }),
+      Placeholder.configure({
+        placeholder: '내용을 작성하세요...',
+      }),
+    ],
+    editorProps: {
+      attributes: {
+        class: 'prose-custom tiptap-editor',
+      },
+    },
+    onUpdate: ({ editor: ed }) => {
+      if (isSettingContent.current) return;
+      const html = ed.getHTML();
+      const md = turndown.turndown(html);
+      setContent(md);
+    },
+  });
 
   useEffect(() => {
     loadPosts();
@@ -75,12 +82,19 @@ function BlogWriteContent() {
           setStatus(post.status as 'published' | 'private');
         }
         setDraftId(post.id);
+        // 마크다운 → HTML 변환 후 에디터에 로드
+        if (editor && post.content) {
+          isSettingContent.current = true;
+          const html = marked.parse(post.content) as string;
+          editor.commands.setContent(html);
+          isSettingContent.current = false;
+        }
       }
       setLoaded(true);
     } else if (!editId) {
       setLoaded(true);
     }
-  }, [editId, posts, loaded]);
+  }, [editId, posts, loaded, editor]);
 
   // Auto-save every 30 seconds
   const doAutoSave = useCallback(() => {
@@ -133,6 +147,62 @@ function BlogWriteContent() {
       router.push(`/blog/${id}`);
     }
   };
+
+  // Toolbar
+  const handleLink = () => {
+    if (!editor) return;
+    const url = window.prompt('URL을 입력하세요:', 'https://');
+    if (url) {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  };
+
+  const handleImage = () => {
+    if (!editor) return;
+    const url = window.prompt('이미지 URL을 입력하세요:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  if (!editor) return null;
+
+  const toolbarGroups = [
+    {
+      items: [
+        { label: 'H1', title: '제목 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: editor.isActive('heading', { level: 1 }) },
+        { label: 'H2', title: '제목 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: editor.isActive('heading', { level: 2 }) },
+        { label: 'H3', title: '제목 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: editor.isActive('heading', { level: 3 }) },
+      ],
+    },
+    {
+      items: [
+        { label: 'B', title: '굵게', action: () => editor.chain().focus().toggleBold().run(), isActive: editor.isActive('bold'), bold: true },
+        { label: 'I', title: '기울임', action: () => editor.chain().focus().toggleItalic().run(), isActive: editor.isActive('italic'), italic: true },
+        { label: 'S', title: '취소선', action: () => editor.chain().focus().toggleStrike().run(), isActive: editor.isActive('strike'), strike: true },
+      ],
+    },
+    {
+      items: [
+        { label: '"', title: '인용', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: editor.isActive('blockquote') },
+        { label: '•', title: '목록', action: () => editor.chain().focus().toggleBulletList().run(), isActive: editor.isActive('bulletList') },
+        { label: '1.', title: '번호 목록', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: editor.isActive('orderedList') },
+      ],
+    },
+    {
+      items: [
+        { label: '<>', title: '인라인 코드', action: () => editor.chain().focus().toggleCode().run(), isActive: editor.isActive('code') },
+        { label: '{ }', title: '코드 블록', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: editor.isActive('codeBlock') },
+        { label: '─', title: '구분선', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: false },
+      ],
+    },
+    {
+      items: [
+        { label: '🔗', title: '링크', action: handleLink, isActive: editor.isActive('link') },
+        { label: '📷', title: '이미지', action: handleImage, isActive: false },
+      ],
+    },
+  ];
 
   return (
     <div>
@@ -190,45 +260,36 @@ function BlogWriteContent() {
         </label>
       </div>
 
-      {/* Editor & Preview */}
-      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Editor */}
-        <div>
-          <div className="mb-1 text-xs font-medium text-gray-400">마크다운</div>
-          {/* Toolbar */}
-          <div className="flex flex-wrap gap-1 rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-700 dark:bg-gray-800">
-            {toolbarItems.map((item) => (
-              <button
-                key={item.title}
-                onClick={item.action}
-                title={item.title}
-                className={`rounded px-2 py-1 text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                  item.bold ? 'font-bold' : ''
-                } ${item.italic ? 'italic' : ''} text-gray-600 dark:text-gray-300`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="내용을 작성하세요... 위 버튼을 눌러 서식을 추가할 수 있습니다."
-            className="h-[500px] w-full resize-none rounded-b-lg rounded-t-none border border-gray-200 bg-white p-4 font-mono text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
-          />
+      {/* WYSIWYG Editor */}
+      <div className="mb-4">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-700 dark:bg-gray-800">
+          {toolbarGroups.map((group, gi) => (
+            <div key={gi} className="flex items-center gap-0.5">
+              {gi > 0 && (
+                <div className="mx-1 h-5 w-px bg-gray-300 dark:bg-gray-600" />
+              )}
+              {group.items.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={item.action}
+                  title={item.title}
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
+                    item.isActive
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                      : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700'
+                  } ${'bold' in item && item.bold ? 'font-bold' : ''} ${'italic' in item && item.italic ? 'italic' : ''} ${'strike' in item && item.strike ? 'line-through' : ''}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
 
-        {/* Preview */}
-        <div>
-          <div className="mb-1 text-xs font-medium text-gray-400">미리보기</div>
-          <div className="prose-custom h-[500px] overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
-            {content ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            ) : (
-              <span className="text-gray-400">미리보기가 여기에 표시됩니다...</span>
-            )}
-          </div>
+        {/* Editor Area */}
+        <div className="min-h-[500px] rounded-b-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+          <EditorContent editor={editor} />
         </div>
       </div>
 
