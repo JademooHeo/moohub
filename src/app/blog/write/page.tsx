@@ -326,7 +326,7 @@ function BlogWriteContent() {
             </button>
             {showColorPicker && (
               <div className="absolute left-0 top-full z-50 mt-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="grid grid-cols-5 gap-1">
+                <div className="flex gap-1">
                   {colorPresets.map((c) => (
                     <button
                       key={c.label}
@@ -339,17 +339,17 @@ function BlogWriteContent() {
                         setShowColorPicker(false);
                       }}
                       title={c.label}
-                      className={`flex h-7 w-7 items-center justify-center rounded transition-transform hover:scale-110 ${
+                      className={`flex h-6 w-6 items-center justify-center rounded-sm transition-transform hover:scale-110 ${
                         currentColor === c.color ? 'ring-2 ring-indigo-500 ring-offset-1' : ''
                       }`}
                     >
                       {c.color ? (
                         <span
-                          className="h-5 w-5 rounded-full border border-gray-200 dark:border-gray-600"
+                          className="h-5 w-5 rounded-sm border border-gray-200 dark:border-gray-600"
                           style={{ background: c.color }}
                         />
                       ) : (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 dark:border-gray-600 dark:text-gray-400">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-sm border border-gray-300 text-[10px] text-gray-500 dark:border-gray-600 dark:text-gray-400">
                           ✕
                         </span>
                       )}
