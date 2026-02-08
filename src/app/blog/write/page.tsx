@@ -7,6 +7,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
+import Color from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
 import TurndownService from 'turndown';
 import { marked } from 'marked';
 import useBlogStore from '@/stores/useBlogStore';
@@ -35,6 +37,20 @@ function BlogWriteContent() {
   const [loaded, setLoaded] = useState(false);
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
   const isSettingContent = useRef(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
+  const colorPresets = [
+    { label: '기본', color: '' },
+    { label: '빨강', color: '#ef4444' },
+    { label: '주황', color: '#f97316' },
+    { label: '노랑', color: '#eab308' },
+    { label: '초록', color: '#22c55e' },
+    { label: '파랑', color: '#3b82f6' },
+    { label: '남색', color: '#6366f1' },
+    { label: '보라', color: '#a855f7' },
+    { label: '분홍', color: '#ec4899' },
+    { label: '회색', color: '#6b7280' },
+  ];
 
   const editor = useEditor({
     extensions: [
@@ -52,6 +68,8 @@ function BlogWriteContent() {
       Placeholder.configure({
         placeholder: '내용을 작성하세요...',
       }),
+      TextStyle,
+      Color,
     ],
     editorProps: {
       attributes: {
@@ -204,6 +222,8 @@ function BlogWriteContent() {
     },
   ];
 
+  const currentColor = editor.getAttributes('textStyle').color || '';
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -285,6 +305,60 @@ function BlogWriteContent() {
               ))}
             </div>
           ))}
+
+          {/* Color Picker */}
+          <div className="relative ml-1 flex items-center">
+            <div className="mx-1 h-5 w-px bg-gray-300 dark:bg-gray-600" />
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              title="글자색"
+              className={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
+                showColorPicker
+                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                  : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span>A</span>
+              <span
+                className="h-2 w-4 rounded-sm border border-gray-300 dark:border-gray-600"
+                style={{ background: currentColor || 'var(--foreground)' }}
+              />
+            </button>
+            {showColorPicker && (
+              <div className="absolute left-0 top-full z-50 mt-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <div className="grid grid-cols-5 gap-1">
+                  {colorPresets.map((c) => (
+                    <button
+                      key={c.label}
+                      onClick={() => {
+                        if (c.color) {
+                          editor.chain().focus().setColor(c.color).run();
+                        } else {
+                          editor.chain().focus().unsetColor().run();
+                        }
+                        setShowColorPicker(false);
+                      }}
+                      title={c.label}
+                      className={`flex h-7 w-7 items-center justify-center rounded transition-transform hover:scale-110 ${
+                        currentColor === c.color ? 'ring-2 ring-indigo-500 ring-offset-1' : ''
+                      }`}
+                    >
+                      {c.color ? (
+                        <span
+                          className="h-5 w-5 rounded-full border border-gray-200 dark:border-gray-600"
+                          style={{ background: c.color }}
+                        />
+                      ) : (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 dark:border-gray-600 dark:text-gray-400">
+                          ✕
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Editor Area */}
