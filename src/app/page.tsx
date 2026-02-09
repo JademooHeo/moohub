@@ -8,6 +8,7 @@ import StockWidget from '@/components/widgets/StockWidget';
 import QuickMemoWidget from '@/components/widgets/QuickMemoWidget';
 import NewsWidget from '@/components/widgets/NewsWidget';
 import CalendarWidget from '@/components/widgets/CalendarWidget';
+import TodoWidget from '@/components/widgets/TodoWidget';
 import DashboardSettings from '@/components/DashboardSettings';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 
@@ -19,6 +20,7 @@ const WIDGET_MAP: Record<string, React.ComponentType> = {
   stock: StockWidget,
   memo: QuickMemoWidget,
   news: NewsWidget,
+  todo: TodoWidget,
 };
 
 export default function Home() {
