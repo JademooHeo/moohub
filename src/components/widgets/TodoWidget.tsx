@@ -10,12 +10,31 @@ interface TodoItem {
 }
 
 const STORAGE_KEY = 'moohub-todos';
+const LAST_RESET_KEY = 'moohub-todos-last-reset';
+
+function getTodayStr(): string {
+  return new Date().toISOString().slice(0, 10); // yyyy-MM-dd
+}
 
 function loadTodos(): TodoItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    let todos: TodoItem[] = data ? JSON.parse(data) : [];
+
+    // 자정 자동 리셋: 날짜가 바뀌면 완료된 항목 삭제
+    const lastReset = localStorage.getItem(LAST_RESET_KEY);
+    const today = getTodayStr();
+    if (lastReset && lastReset !== today) {
+      const before = todos.length;
+      todos = todos.filter((t) => !t.done);
+      if (todos.length !== before) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      }
+    }
+    localStorage.setItem(LAST_RESET_KEY, today);
+
+    return todos;
   } catch {
     return [];
   }
