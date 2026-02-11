@@ -10,6 +10,7 @@ interface WeatherData {
   tempMax: number;
   description: string;
   icon: string;
+  city: string;
 }
 
 interface DailyForecast {
@@ -19,6 +20,20 @@ interface DailyForecast {
   tempMax: number;
   icon: string;
   description: string;
+}
+
+function getPosition(): Promise<{ lat: number; lon: number }> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('no-geo'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => reject(new Error('denied')),
+      { timeout: 5000 }
+    );
+  });
 }
 
 export default function WeatherWidget() {
@@ -37,13 +52,22 @@ export default function WeatherWidget() {
           return;
         }
 
+        // 현위치 가져오기 → 실패 시 서울 기본값
+        let query: string;
+        try {
+          const { lat, lon } = await getPosition();
+          query = `lat=${lat}&lon=${lon}`;
+        } catch {
+          query = 'q=Seoul';
+        }
+
         // 현재 날씨 + 5일 예보 동시 요청
         const [currentRes, forecastRes] = await Promise.all([
           fetch(
-            `https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=${apiKey}&units=metric&lang=kr`
+            `https://api.openweathermap.org/data/2.5/weather?${query}&appid=${apiKey}&units=metric&lang=kr`
           ),
           fetch(
-            `https://api.openweathermap.org/data/2.5/forecast?q=Seoul&appid=${apiKey}&units=metric&lang=kr`
+            `https://api.openweathermap.org/data/2.5/forecast?${query}&appid=${apiKey}&units=metric&lang=kr`
           ),
         ]);
 
@@ -55,6 +79,7 @@ export default function WeatherWidget() {
           tempMax: Math.round(currentData.main.temp_max),
           description: currentData.weather[0].description,
           icon: currentData.weather[0].icon,
+          city: currentData.name,
         });
 
         // 5일 예보 데이터 → 일별로 집계
@@ -120,7 +145,7 @@ export default function WeatherWidget() {
           🌤️
         </span>
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-          날씨 - 서울
+          날씨 - {weather?.city || '로딩 중...'}
         </h3>
       </div>
       {loading ? (
