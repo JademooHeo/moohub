@@ -39,14 +39,15 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                title={item.label}
+                className={`relative rounded-xl px-2 py-2 text-sm font-medium transition-all duration-200 md:px-3 ${
                   isActive
                     ? 'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400'
                     : 'text-gray-500 hover:bg-white/40 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                 }`}
               >
-                <span className="hidden sm:inline mr-1">{item.icon}</span>
-                {item.label}
+                <span className="md:mr-1">{item.icon}</span>
+                <span className="hidden md:inline">{item.label}</span>
                 {isActive && (
                   <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-indigo-500" />
                 )}
