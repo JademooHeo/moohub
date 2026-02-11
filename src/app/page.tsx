@@ -9,7 +9,7 @@ import QuickMemoWidget from '@/components/widgets/QuickMemoWidget';
 import NewsWidget from '@/components/widgets/NewsWidget';
 import CalendarWidget from '@/components/widgets/CalendarWidget';
 import TodoWidget from '@/components/widgets/TodoWidget';
-import YoutubeWidget from '@/components/widgets/YoutubeWidget';
+import MusicWidget from '@/components/widgets/MusicWidget';
 import DashboardSettings from '@/components/DashboardSettings';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 
@@ -22,7 +22,7 @@ const WIDGET_MAP: Record<string, React.ComponentType> = {
   memo: QuickMemoWidget,
   news: NewsWidget,
   todo: TodoWidget,
-  youtube: YoutubeWidget,
+  youtube: MusicWidget,
 };
 
 export default function Home() {

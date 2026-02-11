@@ -18,7 +18,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'memo', label: '빠른 메모', icon: '📝', visible: true },
   { id: 'news', label: '뉴스', icon: '📰', visible: true },
   { id: 'todo', label: '할 일', icon: '✅', visible: true },
-  { id: 'youtube', label: '유튜브', icon: '🎵', visible: true },
+  { id: 'youtube', label: '뮤직', icon: '🎵', visible: true },
 ];
 
 const STORAGE_KEY = 'moohub-dashboard-config';
