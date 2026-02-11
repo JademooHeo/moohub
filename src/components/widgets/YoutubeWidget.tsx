@@ -1,84 +1,125 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Genre {
   id: string;
   label: string;
   emoji: string;
-  // YouTube playlist IDs (shuffle=1 will randomize)
-  playlists: string[];
+  // Individual video IDs (long mixes, compilations, live streams)
+  videos: string[];
 }
 
+// 각 장르별 검증된 유명 유튜브 영상 ID들 (긴 믹스/컴필레이션/라이브)
 const GENRES: Genre[] = [
   {
     id: 'lofi',
     label: 'Lo-fi',
     emoji: '☕',
-    playlists: [
-      'PLOzDu-MXXLliO9fBNZOQTBDddoA3FzZUo', // lofi hip hop
-      'PLofht4PTcKYnaH8w5olJCI-wUVxuoMHqM', // lofi beats
-      'PL6NdkXsPL07KiewBDpJC1R5h7TlnC_ob1', // chillhop
+    videos: [
+      'jfKfPfyJRdk', // Lofi Girl - lofi hip hop radio (live)
+      'rUxyKA_-grg', // Lofi Girl - synthwave radio
+      '4xDzrJKXOOY', // Lofi Girl - sleep/chill radio
+      'TURbeWK2wwg', // Lofi Geek - chill beats
+      'kgx4WGK0oNU', // Chillhop - jazz vibes
+      '5qap5aO4i9A', // Lofi Girl - relax/study beats
+      'yIQd2Ya0Ziw', // Coffee shop ambience lofi
+      'lTRiuFIWV54', // 1 hour lofi beats
     ],
   },
   {
     id: 'kpop',
     label: 'K-POP',
     emoji: '🇰🇷',
-    playlists: [
-      'PLmtapKaZsgZt4N8gWEMOs0JOmXU6OBgSM', // K-pop hits
-      'PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj', // K-pop 2024
-      'PLgSlAiGiPn93EMqAROE8NIzHiatyP-7Ag', // K-pop playlist
+    videos: [
+      'gQlMMD8auMs', // BLACKPINK - 인기곡 모음
+      'CIjXULpV5y4', // BTS playlist
+      'gdZLi9oWNZg', // IU best songs
+      'KDdOscnBJKQ', // aespa playlist
+      '4TWR90KJl84', // NewJeans playlist
+      'vdrqUq5mXMQ', // Stray Kids mix
+      'McjJr7OJvSM', // SEVENTEEN hits
+      'eXBvCpPJOXs', // TWICE best songs
     ],
   },
   {
     id: 'pop',
     label: '팝',
     emoji: '🎤',
-    playlists: [
-      'PLDcnymzs18LU4Kexrs91TVdfnplU3I5zs', // top pop hits
-      'PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj', // pop hits
-      'PLgzTt0k8mXzEk586JgKDPnmbS1J7MoGcB', // pop music
+    videos: [
+      'ktvTqknDobU', // Imagine Dragons radioactive
+      'RgKAFK5djSk', // Wiz Khalifa - See You Again
+      'JGwWNGJdvx8', // Ed Sheeran - Shape of You
+      'CevxZvSJLk8', // Katy Perry - Roar
+      '09R8_2nJtjg', // Maroon 5 - Sugar
+      'YqeW9_5kURI', // Major Lazer - Lean On
+      'OPf0YbXqDm0', // Mark Ronson - Uptown Funk
+      'e-ORhEE9VVg', // Taylor Swift - Blank Space
+      'fRh_vgS2dFE', // Justin Bieber - Sorry
     ],
   },
   {
     id: 'classical',
     label: '클래식',
     emoji: '🎻',
-    playlists: [
-      'PLVXcIDt53MpyAciiSbyBqFaFAqMqzTBfx', // classical music
-      'PLRYL9Mzq1wYKiaLGpK3vZp_L3gTMk1b9Y', // classical essentials
-      'PLJ7QPuvv91JsEudIVWKOEMQRW4VLwGmus', // classical piano
+    videos: [
+      'mIYzp5rcTvU', // Best of Classical Music - Mozart, Beethoven, Bach
+      'jgpJVI3tDbY', // Classical music for studying
+      'rrVDATvUitA', // Chopin - Complete Nocturnes
+      'K-4Hfaz-sxo', // Vivaldi - Four Seasons
+      'pnMLzKAdfMg', // Bach - Cello Suite
+      'GYwqiy_JvIg', // Debussy - Clair de Lune
+      'ho9rZjlsyYY', // Beethoven - Moonlight Sonata full
+      'VbxgYlcNxE8', // Beethoven - 5th Symphony
     ],
   },
   {
     id: 'jazz',
     label: '재즈',
     emoji: '🎷',
-    playlists: [
-      'PLLBnAEo0cR1MotVNwNj7JkL5F4IjeNbKS', // jazz classics
-      'PL8F6B0753B2CCA128', // jazz playlist
-      'PLrpyDacBCh7Bs_SDGBPJq7F1mx-q4VYX3', // smooth jazz
+    videos: [
+      'Dx5qFachd3A', // Jazz in coffee shop
+      'fEvM-OUbaKs', // Relaxing jazz piano music
+      'mOO5qRjVFLw', // Soft jazz for study/work
+      'N7GBDtel0Sg', // Jazz cafe music
+      'neV3EPgvZ3g', // Jazz piano bar
+      'DSGyEsJ17cI', // Autumn jazz coffee shop
+      'dWgxKsWlVIQ', // Jazz relaxing music
     ],
   },
   {
     id: 'ambient',
-    label: '앰비언트',
+    label: '자연/빗소리',
     emoji: '🌿',
-    playlists: [
-      'PLMIbGmCR7FqclGEVx3gOC-R0n_Mtka7Fx', // ambient music
-      'PLQ_PIlf6OzqI6M0ButFnPqyfCTaeVIVYv', // nature sounds
-      'PLYwg0MZRZS3hGYjQSRXHG6hvCFLkn9B0p', // rain sounds
+    videos: [
+      'q76bMs-NwRk', // Rain sound 10 hours
+      'jfKfPfyJRdk', // Lofi ambience
+      '1ZYbU82GVz4', // Fireplace 10 hours
+      'eKFTSSKCzWA', // Ocean waves
+      'sGkh1W5cbH4', // Forest birds
+      'HMnrl0tmd3k', // Rain on window
+      'nDqP7kcr-sc', // Thunder storm
+      'wKnUBDfGS_8', // Campfire crackling
     ],
   },
 ];
 
 const STORAGE_KEY = 'moohub-youtube-genre';
 
+function shuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function YoutubeWidget() {
   const [selectedGenre, setSelectedGenre] = useState<string>('lofi');
-  const [playlistId, setPlaylistId] = useState<string>('');
+  const [currentVideoId, setCurrentVideoId] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playedIds, setPlayedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -88,23 +129,35 @@ export default function YoutubeWidget() {
     }
   }, []);
 
-  const pickRandomPlaylist = (genreId: string) => {
-    const genre = GENRES.find((g) => g.id === genreId);
-    if (!genre) return;
-    const random = genre.playlists[Math.floor(Math.random() * genre.playlists.length)];
-    setPlaylistId(random);
-    setIsPlaying(true);
-  };
+  const pickRandom = useCallback(
+    (genreId: string) => {
+      const genre = GENRES.find((g) => g.id === genreId);
+      if (!genre) return;
+
+      // 아직 안 나온 영상 중에서 랜덤 선택
+      let available = genre.videos.filter((v) => !playedIds.has(v));
+      if (available.length === 0) {
+        // 전부 나왔으면 리셋
+        setPlayedIds(new Set());
+        available = genre.videos;
+      }
+
+      const shuffled = shuffle(available);
+      const picked = shuffled[0];
+
+      setPlayedIds((prev) => new Set([...prev, picked]));
+      setCurrentVideoId(picked);
+      setIsPlaying(true);
+    },
+    [playedIds]
+  );
 
   const handleGenreChange = (genreId: string) => {
     setSelectedGenre(genreId);
     localStorage.setItem(STORAGE_KEY, genreId);
     setIsPlaying(false);
-    setPlaylistId('');
-  };
-
-  const handleShuffle = () => {
-    pickRandomPlaylist(selectedGenre);
+    setCurrentVideoId('');
+    setPlayedIds(new Set());
   };
 
   const currentGenre = GENRES.find((g) => g.id === selectedGenre)!;
@@ -120,11 +173,18 @@ export default function YoutubeWidget() {
           </h2>
         </div>
         {isPlaying && (
-          <div className="flex items-center gap-1">
-            <span className="inline-block h-2 w-0.5 animate-pulse rounded-full bg-indigo-500" style={{ animationDelay: '0ms' }} />
-            <span className="inline-block h-3 w-0.5 animate-pulse rounded-full bg-indigo-500" style={{ animationDelay: '150ms' }} />
-            <span className="inline-block h-1.5 w-0.5 animate-pulse rounded-full bg-indigo-500" style={{ animationDelay: '300ms' }} />
-            <span className="inline-block h-2.5 w-0.5 animate-pulse rounded-full bg-indigo-500" style={{ animationDelay: '450ms' }} />
+          <div className="flex items-center gap-0.5">
+            {[0, 150, 300, 450].map((delay, i) => (
+              <span
+                key={i}
+                className="inline-block w-0.5 rounded-full bg-indigo-500"
+                style={{
+                  height: `${8 + (i % 3) * 4}px`,
+                  animation: 'pulse 1s ease-in-out infinite',
+                  animationDelay: `${delay}ms`,
+                }}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -147,12 +207,13 @@ export default function YoutubeWidget() {
       </div>
 
       {/* Player */}
-      {isPlaying && playlistId ? (
+      {isPlaying && currentVideoId ? (
         <div className="mb-3 overflow-hidden rounded-xl">
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
+              key={currentVideoId}
               className="absolute inset-0 h-full w-full"
-              src={`https://www.youtube.com/embed/videoseries?list=${playlistId}&shuffle=1&autoplay=1&rel=0`}
+              src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=1&rel=0`}
               title="Music player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -166,7 +227,7 @@ export default function YoutubeWidget() {
             {currentGenre.label}
           </p>
           <p className="text-[11px] text-gray-400">
-            아래 버튼을 눌러 랜덤 재생하세요
+            버튼을 눌러 랜덤 재생하세요
           </p>
         </div>
       )}
@@ -174,19 +235,19 @@ export default function YoutubeWidget() {
       {/* Controls */}
       <div className="flex gap-2">
         <button
-          onClick={handleShuffle}
+          onClick={() => pickRandom(selectedGenre)}
           className="glass-btn flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-medium text-white"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          {isPlaying ? '다른 플리 듣기' : '랜덤 재생'}
+          {isPlaying ? '다음 곡' : '랜덤 재생'}
         </button>
         {isPlaying && (
           <button
             onClick={() => {
               setIsPlaying(false);
-              setPlaylistId('');
+              setCurrentVideoId('');
             }}
             className="shrink-0 rounded-lg bg-gray-900/5 px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-900/10 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10"
           >
