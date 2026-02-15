@@ -13,6 +13,7 @@ export default function BlogDetailPage() {
   const router = useRouter();
   const { posts, loadPosts, deletePost } = useBlogStore();
   const [post, setPost] = useState<BlogPost | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function BlogDetailPage() {
     if (params.id && posts.length > 0) {
       const found = posts.find((p) => p.id === params.id);
       setPost(found || null);
+      setLoaded(true);
     }
   }, [params.id, posts]);
 
@@ -32,6 +34,14 @@ export default function BlogDetailPage() {
       router.push('/blog');
     }
   };
+
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -55,7 +65,7 @@ export default function BlogDetailPage() {
         </Link>
       </div>
 
-      <article className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 md:p-8">
+      <article className="glass-card p-6 md:p-8">
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{post.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
@@ -71,7 +81,7 @@ export default function BlogDetailPage() {
                   {post.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-md bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800"
+                      className="glass-badge rounded-md px-2 py-0.5 text-xs"
                     >
                       #{tag}
                     </span>

@@ -141,7 +141,7 @@ export default function ClockWidget() {
                 </div>
                 <button
                   onClick={() => handleDelete(dday.id)}
-                  className="shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400 dark:text-gray-600"
+                  className="shrink-0 text-gray-300 opacity-40 transition-opacity group-hover:opacity-100 hover:text-red-400 dark:text-gray-600 md:opacity-0"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

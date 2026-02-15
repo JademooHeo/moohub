@@ -33,8 +33,27 @@ export default function ExchangeWidget() {
           label: c.label,
           flag: c.flag,
           rate: data.rates[c.code] ? Math.round((1 / data.rates[c.code]) * 100) / 100 : 0,
-          change: (Math.random() - 0.5) * 2,
+          change: 0,
         }));
+
+        // 이전 환율과 비교하여 변동률 계산
+        const prevKey = 'moohub-exchange-prev';
+        const prev = localStorage.getItem(prevKey);
+        if (prev) {
+          try {
+            const prevRates: Record<string, number> = JSON.parse(prev);
+            newRates.forEach((r) => {
+              if (prevRates[r.currency] && prevRates[r.currency] !== 0) {
+                r.change = parseFloat(
+                  (((r.rate - prevRates[r.currency]) / prevRates[r.currency]) * 100).toFixed(2)
+                );
+              }
+            });
+          } catch { /* ignore */ }
+        }
+        const currentRates: Record<string, number> = {};
+        newRates.forEach((r) => { currentRates[r.currency] = r.rate; });
+        localStorage.setItem(prevKey, JSON.stringify(currentRates));
 
         setRates(newRates);
       } catch (err) {

@@ -75,7 +75,7 @@ export default function BlogPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">블로그</h1>
         <Link
           href="/blog/write"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+          className="glass-btn rounded-lg px-4 py-2 text-sm font-medium text-white"
         >
           새 글 작성
         </Link>
@@ -87,10 +87,10 @@ export default function BlogPage() {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
               filter === f.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
+                : 'bg-gray-900/[0.03] text-gray-600 hover:bg-gray-900/[0.06] dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.06]'
             }`}
           >
             {f.label}
@@ -106,7 +106,7 @@ export default function BlogPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="제목, 내용, 태그 검색..."
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+            className="glass-input w-full pl-10"
           />
           <svg
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -131,7 +131,7 @@ export default function BlogPage() {
           {filtered.map((post) => (
             <div
               key={post.id}
-              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+              className="glass-card p-4"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -152,7 +152,7 @@ export default function BlogPage() {
                       {post.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                          className="glass-badge rounded-md px-2 py-0.5 text-xs"
                         >
                           #{tag}
                         </span>

@@ -160,7 +160,7 @@ export default function BookmarksPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="검색..."
-              className="w-48 rounded-lg border border-gray-200 bg-white px-3 py-2 pl-9 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+              className="glass-input w-48 pl-9"
             />
             <svg
               className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -176,7 +176,7 @@ export default function BookmarksPage() {
           {/* Add Folder */}
           <button
             onClick={() => setShowNewFolder(true)}
-            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+            className="glass-btn rounded-lg px-3 py-2 text-sm font-medium text-white"
           >
             + 폴더 추가
           </button>
@@ -193,17 +193,17 @@ export default function BookmarksPage() {
             onKeyDown={(e) => e.key === 'Enter' && handleAddFolder()}
             placeholder="폴더 이름..."
             autoFocus
-            className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+            className="glass-input flex-1"
           />
           <button
             onClick={handleAddFolder}
-            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="glass-btn rounded-lg px-3 py-2 text-sm font-medium text-white"
           >
             추가
           </button>
           <button
             onClick={() => { setShowNewFolder(false); setNewFolderName(''); }}
-            className="rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+            className="rounded-lg bg-gray-900/[0.03] px-3 py-2 text-sm text-gray-600 hover:bg-gray-900/[0.06] dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.08]"
           >
             취소
           </button>
@@ -227,10 +227,10 @@ export default function BookmarksPage() {
           return (
             <div
               key={folder.id}
-              className={`rounded-xl border bg-white transition-colors dark:bg-gray-900 ${
+              className={`glass-card transition-colors ${
                 isDropTarget
-                  ? 'border-indigo-500 ring-2 ring-indigo-500/20'
-                  : 'border-gray-200 dark:border-gray-800'
+                  ? 'ring-2 ring-indigo-500/30'
+                  : ''
               }`}
               onDragOver={(e) => handleDragOver(e, folder.id)}
               onDragLeave={handleDragLeave}
@@ -329,7 +329,7 @@ export default function BookmarksPage() {
 
               {/* Bookmarks Grid */}
               {!folder.collapsed && (
-                <div className="border-t border-gray-100 px-4 py-3 dark:border-gray-800">
+                <div className="border-t border-white/10 px-4 py-3 dark:border-white/5">
                   {folderBookmarks.length === 0 ? (
                     <div className="py-4 text-center text-xs text-gray-400">
                       {search ? '검색 결과 없음' : '북마크를 추가해보세요'}
@@ -364,7 +364,7 @@ export default function BookmarksPage() {
                           </a>
 
                           {/* Hover Actions */}
-                          <div className="absolute right-0.5 top-0.5 hidden gap-0.5 group-hover:flex">
+                          <div className="absolute right-0.5 top-0.5 flex gap-0.5 opacity-50 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
@@ -422,8 +422,8 @@ export default function BookmarksPage() {
 
       {/* Add/Edit Bookmark Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 dark:bg-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="glass-card w-full max-w-md p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
               {editingBookmark ? '북마크 수정' : '북마크 추가'}
             </h2>
@@ -436,7 +436,7 @@ export default function BookmarksPage() {
                   onChange={(e) => setFormUrl(e.target.value)}
                   placeholder="https://example.com"
                   autoFocus
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                  className="glass-input w-full"
                 />
               </div>
               <div>
@@ -446,7 +446,7 @@ export default function BookmarksPage() {
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="사이트 이름"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                  className="glass-input w-full"
                 />
               </div>
               {!editingBookmark && folders.length > 1 && (
@@ -455,7 +455,7 @@ export default function BookmarksPage() {
                   <select
                     value={formFolderId}
                     onChange={(e) => setFormFolderId(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    className="glass-input w-full"
                   >
                     {sortedFolders.map((f) => (
                       <option key={f.id} value={f.id}>
@@ -469,14 +469,14 @@ export default function BookmarksPage() {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => { setShowAddModal(false); setEditingBookmark(null); }}
-                className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-lg bg-gray-900/[0.03] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-900/[0.06] dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]"
               >
                 취소
               </button>
               <button
                 onClick={handleSaveBookmark}
                 disabled={!formUrl.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="glass-btn rounded-lg px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {editingBookmark ? '수정' : '추가'}
               </button>

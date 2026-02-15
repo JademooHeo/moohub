@@ -72,7 +72,7 @@ export default function MemoPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="메모 검색..."
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+            className="glass-input w-full pl-10"
           />
           <svg
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -105,25 +105,25 @@ export default function MemoPage() {
                 {dateMemos.map((memo) => (
                   <div
                     key={memo.id}
-                    className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+                    className="glass-card p-4"
                   >
                     {editingId === memo.id ? (
                       <div>
                         <textarea
                           value={editContent}
                           onChange={(e) => setEditContent(e.target.value)}
-                          className="h-32 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="glass-input h-32 w-full resize-none"
                         />
                         <div className="mt-2 flex gap-2">
                           <button
                             onClick={saveEdit}
-                            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+                            className="glass-btn rounded-lg px-3 py-1.5 text-xs font-medium text-white"
                           >
                             저장
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="rounded-lg bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            className="rounded-lg bg-gray-900/[0.03] px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-900/[0.06] dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]"
                           >
                             취소
                           </button>

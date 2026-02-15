@@ -38,6 +38,8 @@ function BlogWriteContent() {
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
   const isSettingContent = useRef(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [titleError, setTitleError] = useState(false);
+  const [urlModal, setUrlModal] = useState<{ type: 'link' | 'image'; value: string } | null>(null);
 
   const colorPresets = [
     { label: '기본', color: '' },
@@ -142,9 +144,10 @@ function BlogWriteContent() {
 
   const handlePublish = () => {
     if (!title.trim()) {
-      alert('제목을 입력해주세요.');
+      setTitleError(true);
       return;
     }
+    setTitleError(false);
     const parsedTags = tags.split(',').map((t) => t.trim()).filter(Boolean);
 
     if (draftId) {
@@ -169,18 +172,22 @@ function BlogWriteContent() {
   // Toolbar
   const handleLink = () => {
     if (!editor) return;
-    const url = window.prompt('URL을 입력하세요:', 'https://');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    }
+    setUrlModal({ type: 'link', value: 'https://' });
   };
 
   const handleImage = () => {
     if (!editor) return;
-    const url = window.prompt('이미지 URL을 입력하세요:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+    setUrlModal({ type: 'image', value: '' });
+  };
+
+  const handleUrlSubmit = () => {
+    if (!editor || !urlModal || !urlModal.value.trim()) return;
+    if (urlModal.type === 'link') {
+      editor.chain().focus().setLink({ href: urlModal.value.trim() }).run();
+    } else {
+      editor.chain().focus().setImage({ src: urlModal.value.trim() }).run();
     }
+    setUrlModal(null);
   };
 
   if (!editor) return null;
@@ -241,10 +248,14 @@ function BlogWriteContent() {
       <input
         type="text"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => { setTitle(e.target.value); setTitleError(false); }}
         placeholder="제목을 입력하세요"
-        className="mb-4 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-lg font-semibold text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+        className={`glass-input mb-1 w-full text-lg font-semibold ${titleError ? 'ring-2 ring-red-400/50' : ''}`}
       />
+      {titleError && (
+        <p className="mb-3 text-xs text-red-400">제목을 입력해주세요.</p>
+      )}
+      {!titleError && <div className="mb-3" />}
 
       {/* Tags */}
       <input
@@ -252,7 +263,7 @@ function BlogWriteContent() {
         value={tags}
         onChange={(e) => setTags(e.target.value)}
         placeholder="태그 (쉼표로 구분: JavaScript, React, ...)"
-        className="mb-4 w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+        className="glass-input mb-4 w-full"
       />
 
       {/* Status */}
@@ -283,7 +294,7 @@ function BlogWriteContent() {
       {/* WYSIWYG Editor */}
       <div className="mb-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-white/20 bg-gray-900/[0.02] px-2 py-1.5 dark:border-white/[0.08] dark:bg-white/[0.03]">
           {toolbarGroups.map((group, gi) => (
             <div key={gi} className="flex items-center gap-0.5">
               {gi > 0 && (
@@ -362,7 +373,7 @@ function BlogWriteContent() {
         </div>
 
         {/* Editor Area */}
-        <div className="min-h-[500px] rounded-b-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+        <div className="glass-card min-h-[500px] rounded-t-none">
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -371,23 +382,58 @@ function BlogWriteContent() {
       <div className="flex items-center justify-end gap-3">
         <button
           onClick={() => router.push('/blog')}
-          className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded-lg bg-gray-900/[0.03] px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-900/[0.06] dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]"
         >
           취소
         </button>
         <button
           onClick={handleManualSave}
-          className="rounded-lg border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-50 dark:hover:bg-indigo-950"
+          className="rounded-lg border border-indigo-500/30 px-4 py-2 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/10"
         >
           임시저장
         </button>
         <button
           onClick={handlePublish}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+          className="glass-btn rounded-lg px-4 py-2 text-sm font-medium text-white"
         >
           발행
         </button>
       </div>
+
+      {/* URL Input Modal (replaces window.prompt) */}
+      {urlModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="glass-card w-full max-w-sm p-5">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+              {urlModal.type === 'link' ? '🔗 링크 URL' : '📷 이미지 URL'}
+            </h3>
+            <input
+              type="text"
+              value={urlModal.value}
+              onChange={(e) => setUrlModal({ ...urlModal, value: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleUrlSubmit(); if (e.key === 'Escape') setUrlModal(null); }}
+              placeholder={urlModal.type === 'link' ? 'https://example.com' : 'https://example.com/image.png'}
+              autoFocus
+              className="glass-input mb-3 w-full"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setUrlModal(null)}
+                className="rounded-lg bg-gray-900/[0.03] px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-900/[0.06] dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUrlSubmit}
+                disabled={!urlModal.value.trim()}
+                className="glass-btn rounded-lg px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
