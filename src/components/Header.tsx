@@ -4,9 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import useThemeStore from '@/stores/useThemeStore';
-import useBlogStore from '@/stores/useBlogStore';
-import useMemoStore from '@/stores/useMemoStore';
-import useBookmarkStore from '@/stores/useBookmarkStore';
 
 const navItems = [
   { label: '홈', href: '/', icon: '🏠' },
@@ -21,13 +18,7 @@ export default function Header() {
   const { theme, toggleTheme } = useThemeStore();
   const { data: session } = useSession();
 
-  const handleSignOut = async () => {
-    // 로그아웃 시 각 스토어 초기화
-    useBlogStore.setState({ posts: [] });
-    useMemoStore.setState({ memos: [] });
-    useBookmarkStore.setState({ bookmarks: [], folders: [] });
-    await signOut();
-  };
+  const handleSignOut = () => signOut();
 
   return (
     <header className="glass-header sticky top-0 z-50">
