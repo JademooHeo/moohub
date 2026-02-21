@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import useBookmarkStore, { Bookmark } from '@/stores/useBookmarkStore';
 
 export default function BookmarksPage() {
+  const { data: session, status } = useSession();
   const {
     bookmarks,
     folders,
@@ -39,8 +41,8 @@ export default function BookmarksPage() {
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadBookmarks();
-  }, [loadBookmarks]);
+    if (session) loadBookmarks();
+  }, [session, loadBookmarks]);
 
   const sortedFolders = useMemo(() => {
     return [...folders].sort((a, b) => a.order - b.order);
@@ -146,6 +148,24 @@ export default function BookmarksPage() {
     }
     setDragOverFolderId(null);
   };
+
+  if (status === 'loading') {
+    return <div className="py-20 text-center text-gray-400">로딩 중...</div>;
+  }
+
+  if (!session) {
+    return (
+      <div className="py-20 text-center">
+        <p className="mb-4 text-gray-500 dark:text-gray-400">즐겨찾기를 보려면 로그인이 필요해요.</p>
+        <button
+          onClick={() => signIn('google')}
+          className="glass-btn rounded-lg px-5 py-2.5 text-sm font-medium text-white"
+        >
+          Google로 로그인
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

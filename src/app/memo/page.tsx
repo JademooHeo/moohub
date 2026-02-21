@@ -3,9 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useSession, signIn } from 'next-auth/react';
 import useMemoStore, { Memo } from '@/stores/useMemoStore';
 
 export default function MemoPage() {
+  const { data: session, status } = useSession();
   const { memos, loadMemos, updateMemo, deleteMemo } = useMemoStore();
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -14,8 +16,8 @@ export default function MemoPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadMemos();
-  }, [loadMemos]);
+    if (session) loadMemos();
+  }, [session, loadMemos]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return memos;
@@ -59,6 +61,24 @@ export default function MemoPage() {
   };
 
   const today = format(new Date(), 'yyyy-MM-dd');
+
+  if (status === 'loading') {
+    return <div className="py-20 text-center text-gray-400">로딩 중...</div>;
+  }
+
+  if (!session) {
+    return (
+      <div className="py-20 text-center">
+        <p className="mb-4 text-gray-500 dark:text-gray-400">메모를 보려면 로그인이 필요해요.</p>
+        <button
+          onClick={() => signIn('google')}
+          className="glass-btn rounded-lg px-5 py-2.5 text-sm font-medium text-white"
+        >
+          Google로 로그인
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

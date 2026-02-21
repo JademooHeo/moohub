@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import useThemeStore from '@/stores/useThemeStore';
+import useBlogStore from '@/stores/useBlogStore';
+import useMemoStore from '@/stores/useMemoStore';
+import useBookmarkStore from '@/stores/useBookmarkStore';
 
 const navItems = [
   { label: '홈', href: '/', icon: '🏠' },
@@ -17,6 +20,14 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useThemeStore();
   const { data: session } = useSession();
+
+  const handleSignOut = async () => {
+    // 로그아웃 시 각 스토어 초기화
+    useBlogStore.setState({ posts: [] });
+    useMemoStore.setState({ memos: [] });
+    useBookmarkStore.setState({ bookmarks: [], folders: [] });
+    await signOut();
+  };
 
   return (
     <header className="glass-header sticky top-0 z-50">
@@ -73,7 +84,7 @@ export default function Header() {
           {/* Google 로그인/로그아웃 */}
           {session ? (
             <button
-              onClick={() => signOut()}
+              onClick={handleSignOut}
               className="ml-1 flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-white/40 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
             >
               {session.user?.image && (

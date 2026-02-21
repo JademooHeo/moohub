@@ -4,19 +4,21 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useSession, signIn } from 'next-auth/react';
 import useBlogStore, { PostStatus } from '@/stores/useBlogStore';
 
 type FilterType = 'all' | PostStatus;
 
 export default function BlogPage() {
+  const { data: session, status } = useSession();
   const { posts, loadPosts, deletePost } = useBlogStore();
   const [filter, setFilter] = useState<FilterType>('all');
   const [search, setSearch] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+    if (session) loadPosts();
+  }, [session, loadPosts]);
 
   const filtered = useMemo(() => {
     let result = posts;
@@ -68,6 +70,24 @@ export default function BlogPage() {
     deletePost(id);
     setDeleteConfirmId(null);
   };
+
+  if (status === 'loading') {
+    return <div className="py-20 text-center text-gray-400">로딩 중...</div>;
+  }
+
+  if (!session) {
+    return (
+      <div className="py-20 text-center">
+        <p className="mb-4 text-gray-500 dark:text-gray-400">블로그를 보려면 로그인이 필요해요.</p>
+        <button
+          onClick={() => signIn('google')}
+          className="glass-btn rounded-lg px-5 py-2.5 text-sm font-medium text-white"
+        >
+          Google로 로그인
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
