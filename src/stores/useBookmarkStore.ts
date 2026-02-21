@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface Bookmark {
   id: string;
@@ -20,129 +19,138 @@ export interface BookmarkFolder {
 interface BookmarkState {
   bookmarks: Bookmark[];
   folders: BookmarkFolder[];
-  loadBookmarks: () => void;
-  addFolder: (name: string) => string;
-  renameFolder: (id: string, name: string) => void;
-  deleteFolder: (id: string) => void;
-  toggleFolder: (id: string) => void;
-  addBookmark: (data: { title: string; url: string; folderId: string }) => void;
-  updateBookmark: (id: string, data: { title: string; url: string }) => void;
-  deleteBookmark: (id: string) => void;
-  moveBookmark: (bookmarkId: string, targetFolderId: string) => void;
-  reorderFolders: (folderIds: string[]) => void;
+  isLoading: boolean;
+  loadBookmarks: () => Promise<void>;
+  addFolder: (name: string) => Promise<string>;
+  renameFolder: (id: string, name: string) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
+  toggleFolder: (id: string) => Promise<void>;
+  addBookmark: (data: { title: string; url: string; folderId: string }) => Promise<void>;
+  updateBookmark: (id: string, data: { title: string; url: string }) => Promise<void>;
+  deleteBookmark: (id: string) => Promise<void>;
+  moveBookmark: (bookmarkId: string, targetFolderId: string) => Promise<void>;
+  reorderFolders: (folderIds: string[]) => Promise<void>;
 }
-
-const BOOKMARKS_KEY = 'moohub-bookmarks';
-const FOLDERS_KEY = 'moohub-bookmark-folders';
-
-const saveFolders = (folders: BookmarkFolder[]) => {
-  localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
-};
-
-const saveBookmarks = (bookmarks: Bookmark[]) => {
-  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-};
 
 const useBookmarkStore = create<BookmarkState>((set, get) => ({
   bookmarks: [],
   folders: [],
+  isLoading: false,
 
-  loadBookmarks: () => {
-    if (typeof window === 'undefined') return;
-    const storedBookmarks = localStorage.getItem(BOOKMARKS_KEY);
-    const storedFolders = localStorage.getItem(FOLDERS_KEY);
-    set({
-      bookmarks: storedBookmarks ? JSON.parse(storedBookmarks) : [],
-      folders: storedFolders ? JSON.parse(storedFolders) : [],
+  loadBookmarks: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch('/api/bookmarks');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      set({ folders: data.folders, bookmarks: data.bookmarks });
+    } catch (e) {
+      console.error('loadBookmarks error:', e);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  addFolder: async (name: string) => {
+    const res = await fetch('/api/bookmarks/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
     });
+    const newFolder = await res.json();
+    set((state) => ({ folders: [...state.folders, newFolder] }));
+    return newFolder.id;
   },
 
-  addFolder: (name: string) => {
-    const id = uuidv4();
-    const { folders } = get();
-    const newFolder: BookmarkFolder = {
-      id,
-      name,
-      order: folders.length,
-      collapsed: false,
-    };
-    const updated = [...folders, newFolder];
-    saveFolders(updated);
-    set({ folders: updated });
-    return id;
+  renameFolder: async (id: string, name: string) => {
+    await fetch(`/api/bookmarks/folders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    set((state) => ({
+      folders: state.folders.map((f) => (f.id === id ? { ...f, name } : f)),
+    }));
   },
 
-  renameFolder: (id: string, name: string) => {
-    const updated = get().folders.map((f) =>
-      f.id === id ? { ...f, name } : f
-    );
-    saveFolders(updated);
-    set({ folders: updated });
+  deleteFolder: async (id: string) => {
+    await fetch(`/api/bookmarks/folders/${id}`, { method: 'DELETE' });
+    set((state) => ({
+      folders: state.folders.filter((f) => f.id !== id),
+      bookmarks: state.bookmarks.filter((b) => b.folderId !== id),
+    }));
   },
 
-  deleteFolder: (id: string) => {
-    const updatedFolders = get().folders.filter((f) => f.id !== id);
-    const updatedBookmarks = get().bookmarks.filter((b) => b.folderId !== id);
-    saveFolders(updatedFolders);
-    saveBookmarks(updatedBookmarks);
-    set({ folders: updatedFolders, bookmarks: updatedBookmarks });
+  toggleFolder: async (id: string) => {
+    const folder = get().folders.find((f) => f.id === id);
+    if (!folder) return;
+    const collapsed = !folder.collapsed;
+    await fetch(`/api/bookmarks/folders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ collapsed }),
+    });
+    set((state) => ({
+      folders: state.folders.map((f) => (f.id === id ? { ...f, collapsed } : f)),
+    }));
   },
 
-  toggleFolder: (id: string) => {
-    const updated = get().folders.map((f) =>
-      f.id === id ? { ...f, collapsed: !f.collapsed } : f
-    );
-    saveFolders(updated);
-    set({ folders: updated });
+  addBookmark: async (data) => {
+    const res = await fetch('/api/bookmarks/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const newBookmark = await res.json();
+    set((state) => ({ bookmarks: [...state.bookmarks, newBookmark] }));
   },
 
-  addBookmark: (data) => {
-    const { bookmarks } = get();
-    const folderBookmarks = bookmarks.filter((b) => b.folderId === data.folderId);
-    const newBookmark: Bookmark = {
-      id: uuidv4(),
-      title: data.title,
-      url: data.url.startsWith('http') ? data.url : `https://${data.url}`,
-      folderId: data.folderId,
-      order: folderBookmarks.length,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [...bookmarks, newBookmark];
-    saveBookmarks(updated);
-    set({ bookmarks: updated });
+  updateBookmark: async (id: string, data) => {
+    const res = await fetch(`/api/bookmarks/items/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const updated = await res.json();
+    set((state) => ({
+      bookmarks: state.bookmarks.map((b) => (b.id === id ? updated : b)),
+    }));
   },
 
-  updateBookmark: (id: string, data) => {
-    const updated = get().bookmarks.map((b) =>
-      b.id === id
-        ? { ...b, title: data.title, url: data.url.startsWith('http') ? data.url : `https://${data.url}` }
-        : b
-    );
-    saveBookmarks(updated);
-    set({ bookmarks: updated });
+  deleteBookmark: async (id: string) => {
+    await fetch(`/api/bookmarks/items/${id}`, { method: 'DELETE' });
+    set((state) => ({ bookmarks: state.bookmarks.filter((b) => b.id !== id) }));
   },
 
-  deleteBookmark: (id: string) => {
-    const updated = get().bookmarks.filter((b) => b.id !== id);
-    saveBookmarks(updated);
-    set({ bookmarks: updated });
+  moveBookmark: async (bookmarkId: string, targetFolderId: string) => {
+    await fetch(`/api/bookmarks/items/${bookmarkId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderId: targetFolderId }),
+    });
+    set((state) => ({
+      bookmarks: state.bookmarks.map((b) =>
+        b.id === bookmarkId ? { ...b, folderId: targetFolderId } : b
+      ),
+    }));
   },
 
-  moveBookmark: (bookmarkId: string, targetFolderId: string) => {
-    const updated = get().bookmarks.map((b) =>
-      b.id === bookmarkId ? { ...b, folderId: targetFolderId } : b
-    );
-    saveBookmarks(updated);
-    set({ bookmarks: updated });
-  },
-
-  reorderFolders: (folderIds: string[]) => {
+  reorderFolders: async (folderIds: string[]) => {
     const { folders } = get();
     const updated = folderIds.map((id, index) => {
       const folder = folders.find((f) => f.id === id)!;
       return { ...folder, order: index };
     });
-    saveFolders(updated);
+    // 순서 변경을 병렬로 저장
+    await Promise.all(
+      updated.map((f) =>
+        fetch(`/api/bookmarks/folders/${f.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: f.order }),
+        })
+      )
+    );
     set({ folders: updated });
   },
 }));

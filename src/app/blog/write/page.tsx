@@ -117,9 +117,9 @@ function BlogWriteContent() {
   }, [editId, posts, loaded, editor]);
 
   // Auto-save every 30 seconds
-  const doAutoSave = useCallback(() => {
+  const doAutoSave = useCallback(async () => {
     if (!title.trim() && !content.trim()) return;
-    const id = saveDraft(draftId, {
+    const id = await saveDraft(draftId, {
       title,
       content,
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -142,7 +142,7 @@ function BlogWriteContent() {
     doAutoSave();
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title.trim()) {
       setTitleError(true);
       return;
@@ -151,7 +151,7 @@ function BlogWriteContent() {
     const parsedTags = tags.split(',').map((t) => t.trim()).filter(Boolean);
 
     if (draftId) {
-      updatePost(draftId, {
+      await updatePost(draftId, {
         title,
         content,
         tags: parsedTags,
@@ -159,7 +159,7 @@ function BlogWriteContent() {
       });
       router.push(`/blog/${draftId}`);
     } else {
-      const id = addPost({
+      const id = await addPost({
         title,
         content,
         tags: parsedTags,

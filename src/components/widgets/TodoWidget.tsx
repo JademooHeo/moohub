@@ -48,7 +48,10 @@ export default function TodoWidget() {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [input, setInput] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTodos(loadTodos());
@@ -88,6 +91,33 @@ export default function TodoWidget() {
     const updated = todos.filter((t) => !t.done);
     setTodos(updated);
     saveTodos(updated);
+  };
+
+  const startEdit = (todo: TodoItem) => {
+    setEditingId(todo.id);
+    setEditingText(todo.text);
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  const commitEdit = () => {
+    if (!editingId) return;
+    const text = editingText.trim();
+    if (!text) {
+      cancelEdit();
+      return;
+    }
+    const updated = todos.map((t) =>
+      t.id === editingId ? { ...t, text } : t
+    );
+    setTodos(updated);
+    saveTodos(updated);
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
   };
 
   const filtered = todos.filter((t) => {
@@ -210,26 +240,59 @@ export default function TodoWidget() {
               )}
             </button>
 
-            {/* Text */}
-            <span
-              className={`flex-1 text-sm transition-all ${
-                todo.done
-                  ? 'text-gray-400 line-through dark:text-gray-500'
-                  : 'text-gray-700 dark:text-gray-300'
-              }`}
-            >
-              {todo.text}
-            </span>
+            {/* Text / Edit Input */}
+            {editingId === todo.id ? (
+              <input
+                ref={editInputRef}
+                type="text"
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitEdit();
+                  if (e.key === 'Escape') cancelEdit();
+                }}
+                onBlur={commitEdit}
+                className="flex-1 rounded bg-white/60 px-1.5 py-0.5 text-sm text-gray-800 outline-none ring-1 ring-indigo-400 dark:bg-white/10 dark:text-white"
+              />
+            ) : (
+              <span
+                onDoubleClick={() => !todo.done && startEdit(todo)}
+                title={todo.done ? '' : '더블클릭하여 수정'}
+                className={`flex-1 cursor-default text-sm transition-all select-none ${
+                  todo.done
+                    ? 'text-gray-400 line-through dark:text-gray-500'
+                    : 'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                }`}
+              >
+                {todo.text}
+              </span>
+            )}
 
-            {/* Delete */}
-            <button
-              onClick={() => deleteTodo(todo.id)}
-              className="shrink-0 text-gray-300 opacity-40 transition-opacity group-hover:opacity-100 hover:text-red-400 dark:text-gray-600 md:opacity-0"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* Edit / Delete buttons */}
+            {editingId !== todo.id && (
+              <>
+                {!todo.done && (
+                  <button
+                    onClick={() => startEdit(todo)}
+                    className="shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 hover:text-indigo-400 dark:text-gray-600"
+                    title="수정"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 019 16H7v-2a2 2 0 01.586-1.414z" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  className="shrink-0 text-gray-300 opacity-40 transition-opacity group-hover:opacity-100 hover:text-red-400 dark:text-gray-600 md:opacity-0"
+                  title="삭제"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
         ))}
       </div>

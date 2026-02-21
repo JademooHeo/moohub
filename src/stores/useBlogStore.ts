@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
 
 export type PostStatus = 'published' | 'private' | 'draft';
 
@@ -16,95 +15,69 @@ export interface BlogPost {
 
 interface BlogState {
   posts: BlogPost[];
-  loadPosts: () => void;
-  addPost: (post: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'>) => string;
-  updatePost: (id: string, data: Partial<Omit<BlogPost, 'id' | 'createdAt'>>) => void;
-  deletePost: (id: string) => void;
+  isLoading: boolean;
+  loadPosts: () => Promise<void>;
+  addPost: (post: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'>) => Promise<string>;
+  updatePost: (id: string, data: Partial<Omit<BlogPost, 'id' | 'createdAt'>>) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
-  saveDraft: (id: string | null, data: { title: string; content: string; tags: string[]; status: PostStatus }) => string;
+  saveDraft: (id: string | null, data: { title: string; content: string; tags: string[]; status: PostStatus }) => Promise<string>;
 }
-
-const STORAGE_KEY = 'moohub-blog-posts';
 
 const useBlogStore = create<BlogState>((set, get) => ({
   posts: [],
-  loadPosts: () => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      set({ posts: JSON.parse(stored) });
+  isLoading: false,
+
+  loadPosts: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch('/api/blog');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      set({ posts: data });
+    } catch (e) {
+      console.error('loadPosts error:', e);
+    } finally {
+      set({ isLoading: false });
     }
   },
-  addPost: (post) => {
-    const now = new Date().toISOString();
-    const id = uuidv4();
-    const newPost: BlogPost = {
-      ...post,
-      id,
-      createdAt: now,
-      updatedAt: now,
-      publishedAt: post.status !== 'draft' ? now : null,
-    };
-    set((state) => {
-      const updated = [newPost, ...state.posts];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return { posts: updated };
+
+  addPost: async (post) => {
+    const res = await fetch('/api/blog', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(post),
     });
-    return id;
+    const newPost = await res.json();
+    set((state) => ({ posts: [newPost, ...state.posts] }));
+    return newPost.id;
   },
-  updatePost: (id, data) =>
-    set((state) => {
-      const updated = state.posts.map((p) => {
-        if (p.id !== id) return p;
-        const updatedPost = { ...p, ...data, updatedAt: new Date().toISOString() };
-        if (data.status && data.status !== 'draft' && !p.publishedAt) {
-          updatedPost.publishedAt = new Date().toISOString();
-        }
-        return updatedPost;
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return { posts: updated };
-    }),
-  deletePost: (id) =>
-    set((state) => {
-      const updated = state.posts.filter((p) => p.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return { posts: updated };
-    }),
-  getPost: (id) => {
-    return get().posts.find((p) => p.id === id);
+
+  updatePost: async (id, data) => {
+    const res = await fetch(`/api/blog/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const updated = await res.json();
+    set((state) => ({
+      posts: state.posts.map((p) => (p.id === id ? updated : p)),
+    }));
   },
-  saveDraft: (id, data) => {
-    const now = new Date().toISOString();
+
+  deletePost: async (id) => {
+    await fetch(`/api/blog/${id}`, { method: 'DELETE' });
+    set((state) => ({ posts: state.posts.filter((p) => p.id !== id) }));
+  },
+
+  getPost: (id) => get().posts.find((p) => p.id === id),
+
+  saveDraft: async (id, data) => {
     if (id) {
-      // Update existing
-      set((state) => {
-        const updated = state.posts.map((p) =>
-          p.id === id ? { ...p, ...data, updatedAt: now } : p
-        );
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return { posts: updated };
-      });
+      await get().updatePost(id, data);
       return id;
     } else {
-      // Create new draft
-      const newId = uuidv4();
-      const newPost: BlogPost = {
-        id: newId,
-        title: data.title,
-        content: data.content,
-        tags: data.tags,
-        status: 'draft',
-        createdAt: now,
-        updatedAt: now,
-        publishedAt: null,
-      };
-      set((state) => {
-        const updated = [newPost, ...state.posts];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return { posts: updated };
-      });
-      return newId;
+      return await get().addPost({ ...data, status: 'draft' });
     }
   },
 }));
